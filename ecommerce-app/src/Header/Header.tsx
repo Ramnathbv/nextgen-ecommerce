@@ -1,10 +1,13 @@
 
 
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import Login from '../Login/Login';
 import './Header.css';
 
-const Header = () => {
+type HeaderProps = { cartCount?: number };
+
+const Header = ({ cartCount = 0 }: HeaderProps) => {
   const [showLogin, setShowLogin] = useState(false);
 
   const handleLoginClick = () => {
@@ -24,10 +27,15 @@ const Header = () => {
           </div>
           <nav className="nav-menu">
             <ul className="nav-list">
-              <li><a href="#home" className="nav-link">Home</a></li>
-              <li><a href="#products" className="nav-link">Products</a></li>
-              <li><a href="#about" className="nav-link">About</a></li>
-              <li><a href="#contact" className="nav-link">Contact Us</a></li>
+              <li><Link to="/" className="nav-link">Home</Link></li>
+              <li><Link to="/products" className="nav-link">Products</Link></li>
+              <li><Link to="/about" className="nav-link">About</Link></li>
+              <li><Link to="/contact" className="nav-link">Contact Us</Link></li>
+              <li>
+                <Link to="/cart" className="nav-link">
+                  Cart <span className="cart-chip" aria-label={`Items in cart: ${cartCount}`}>{cartCount}</span>
+                </Link>
+              </li>
             </ul>
           </nav>
           <div className="auth-section">
