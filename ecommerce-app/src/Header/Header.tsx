@@ -1,13 +1,24 @@
 
 
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import Login from '../Login/Login';
 import { useAuth } from '../context/AuthContext';
 import './Header.css';
 
 type HeaderProps = { cartCount?: number };
 
 const Header = ({ cartCount = 0 }: HeaderProps) => {
-  const { isAuthenticated, openLogin, logout } = useAuth();
+  const { isLoggedIn, username, logout } = useAuth();
+  const [showLogin, setShowLogin] = useState(false);
+
+  const handleLoginClick = () => {
+    setShowLogin(true);
+  };
+
+  const handleCloseLogin = () => {
+    setShowLogin(false);
+  };
 
   return (
     <>
@@ -29,15 +40,20 @@ const Header = ({ cartCount = 0 }: HeaderProps) => {
               </li>
             </ul>
           </nav>
-          <div className="auth-section">
-            {isAuthenticated ? (
-              <button className="login-btn" onClick={logout}>Logout</button>
-            ) : (
-              <button className="login-btn" onClick={() => openLogin()}>Login</button>
-            )}
-          </div>
+       <div className="auth-section">
+                {isLoggedIn ? (
+                  <div>
+                    <span>Welcome, {username}</span>
+                    <button onClick={logout}>Logout</button>
+                  </div>
+                ) : (
+                  <button className="login-btn" onClick={handleLoginClick}>Login</button>
+                )}
+        </div>
         </div>
       </header>
+      
+      {showLogin && <Login onClose={handleCloseLogin} />}
     </>
   );
 };

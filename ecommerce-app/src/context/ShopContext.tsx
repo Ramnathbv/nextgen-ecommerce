@@ -26,15 +26,6 @@ export const ShopProvider = ({ children }: { children: ReactNode }) => {
     });
   };
 
-  const setItemQuantity = (productId: string, quantity: number) => {
-    setCartItems(prev => prev
-      .map(ci => ci.id === productId ? { ...ci, quantity: Math.max(1, quantity) } : ci)
-      .filter(ci => ci.quantity > 0));
-  };
-
-  const incrementItem = (productId: string) => setItemQuantity(productId, (cartItems.find(ci => ci.id === productId)?.quantity ?? 0) + 1);
-  const decrementItem = (productId: string) => setItemQuantity(productId, (cartItems.find(ci => ci.id === productId)?.quantity ?? 1) - 1);
-
   const removeFromCart = (productId: string) => {
     setCartItems(prev => prev.filter(ci => ci.id !== productId));
   };
@@ -63,9 +54,6 @@ export const ShopProvider = ({ children }: { children: ReactNode }) => {
       toggleFavorite,
       isFavorite,
       totalItemsInCart,
-      setItemQuantity,
-      incrementItem,
-      decrementItem,
     }}>
       {children}
     </ShopContext.Provider>

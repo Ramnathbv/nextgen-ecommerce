@@ -1,137 +1,69 @@
-# NextGen Ecommerce (React + TypeScript + Vite)
+# React + TypeScript + Vite
 
-A modern ecommerce frontend built with React 19, TypeScript, and Vite. It features a full-width header, responsive product catalog with category filtering, product detail pages, cart with context state, login modal, and more.
+This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
-## Features
+Currently, two official plugins are available:
 
-- Header with navigation: Home, Products, About, Contact, Cart (with live item count)
-- Login modal with Sign In / Sign Up toggle (username/password, email, password confirm)
-- Home page
-  - Latest Trending section for a cloth store
-  - Category chips (Newly Added, Men, Women, Kids) with filtering
-  - Responsive product grid with Add to Cart and Favorites (heart) actions
-- Products page
-  - Same category chips and filtering
-  - Product grid with favorites and add to cart
-- Product Detail page: `/products/:id`
-  - Large image, price, categories, add to cart, favorite
-- Cart page: `/cart`
-  - Lists items, quantity total, remove item, clear cart, total price
-- About page with product-related content
-- Contact page (placeholder)
-- Client-side routing powered by React Router
-- Global state
-  - Shop context for cart and favorites
-  - Guest ID utility for anonymous tracking
-- Full-width layout with overflow protection and responsive design
+- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
+- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
 
-## Tech Stack
+## Expanding the ESLint configuration
 
-- React 19, TypeScript, Vite
-- React Router
-- ESLint (strict, type-aware)
+If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
 
-## Getting Started
+```js
+export default tseslint.config([
+  globalIgnores(['dist']),
+  {
+    files: ['**/*.{ts,tsx}'],
+    extends: [
+      // Other configs...
 
-```bash
-# Install
-npm install
+      // Remove tseslint.configs.recommended and replace with this
+      ...tseslint.configs.recommendedTypeChecked,
+      // Alternatively, use this for stricter rules
+      ...tseslint.configs.strictTypeChecked,
+      // Optionally, add this for stylistic rules
+      ...tseslint.configs.stylisticTypeChecked,
 
-# Run dev server
-npm run dev
-
-# Type-check & build
-npm run build
-
-# Preview production build
-npm run preview
+      // Other configs...
+    ],
+    languageOptions: {
+      parserOptions: {
+        project: ['./tsconfig.node.json', './tsconfig.app.json'],
+        tsconfigRootDir: import.meta.dirname,
+      },
+      // other options...
+    },
+  },
+])
 ```
 
-Open the dev server URL printed in the terminal (usually `http://localhost:5173`).
+You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
 
-## Project Structure
+```js
+// eslint.config.js
+import reactX from 'eslint-plugin-react-x'
+import reactDom from 'eslint-plugin-react-dom'
 
+export default tseslint.config([
+  globalIgnores(['dist']),
+  {
+    files: ['**/*.{ts,tsx}'],
+    extends: [
+      // Other configs...
+      // Enable lint rules for React
+      reactX.configs['recommended-typescript'],
+      // Enable lint rules for React DOM
+      reactDom.configs.recommended,
+    ],
+    languageOptions: {
+      parserOptions: {
+        project: ['./tsconfig.node.json', './tsconfig.app.json'],
+        tsconfigRootDir: import.meta.dirname,
+      },
+      // other options...
+    },
+  },
+])
 ```
-src/
-  App.tsx                # Routes and app shell
-  main.tsx               # Entry with BrowserRouter
-  Header/                # Header component and styles
-  Home/                  # Home page, filtering, grid
-  pages/
-    Products.tsx/.css    # Catalog page with filtering
-    ProductDetail.tsx/.css
-    Cart.tsx/.css        # Cart page
-    About.tsx/.css       # About content
-    Contact.tsx          # Contact placeholder
-  common/interfaces/     # Shared TypeScript interfaces
-  context/
-    ShopContext.tsx      # Cart + favorites context
-    shopTypes.ts         # Shop context types
-    AuthContext.tsx      # Placeholder auth provider
-  data/
-    products.ts          # Categories & sample products
-  utils/
-    guestId.ts           # Persistent guest user ID utility
-  assets/
-    Tshirts/             # Local product images
-```
-
-## Routing
-
-- `/` → Home
-- `/products` → Products
-- `/products/:id` → Product Detail
-- `/cart` → Cart
-- `/about` → About
-- `/contact` → Contact
-
-## Key Components
-
-- `Header/Header.tsx`
-  - Navigation with `Link`
-  - Cart chip shows total items from Shop context
-  - Login button opens modal
-- `Login/Login.tsx`
-  - Sign In / Sign Up forms with toggle and close
-- `Home/Home.tsx`, `pages/Products.tsx`
-  - Category chips with active state
-  - Product grid cards: image, name, price, heart (favorite), Add to Cart
-  - Click image or name to open detail
-- `pages/ProductDetail.tsx`
-  - Large image, price, categories, favorite toggle, Add to Cart
-- `pages/Cart.tsx`
-  - Item list with qty and total, remove and clear actions
-
-## State Management (Shop Context)
-
-- `ShopContext` provides:
-  - `cartItems`, `totalItemsInCart`
-  - `addToCart(product)`, `removeFromCart(id)`, `clearCart()`
-  - `favorites` as a Set, `toggleFavorite(id)`, `isFavorite(id)`
-
-Wrap your app with `ShopProvider` (already done in `App.tsx`).
-
-## Guest User ID
-
-- `utils/guestId.ts` exposes `getOrCreateGuestId()` and `clearGuestId()`
-- Persists a UUID in localStorage; falls back to a cookie
-- Attach `X-Guest-Id` header for backend APIs (create a fetch/axios wrapper as needed)
-
-## Styling & Responsiveness
-
-- Full-width header and content
-- Global box-sizing and overflow-x protection
-- Responsive grids and layout
-
-## Development Notes
-
-- Type-aware ESLint is enabled; fix lints before committing
-- Imports use explicit `.tsx` where needed due to Vite/TS settings (`verbatimModuleSyntax`)
-- Sample product images use local assets under `src/assets/Tshirts/`
-
-## Roadmap
-
-- Real authentication
-- Persistent cart storage (localStorage/remote)
-- Product search and sorting
-- Checkout flow
