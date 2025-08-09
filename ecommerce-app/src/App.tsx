@@ -9,6 +9,7 @@ import Cart from './pages/Cart.tsx'
 import Contact from './pages/Contact.tsx'
 import ProductDetail from './pages/ProductDetail.tsx'
 import Products from './pages/Products.tsx'
+import { AuthProvider } from './context/AuthContext';
 
 const AppShell = () => {
   const { totalItemsInCart } = useShop();
@@ -31,9 +32,11 @@ const AppShell = () => {
 
 function App() {
   return (
-    <ShopProvider>
-      <AppShell />
-    </ShopProvider>
+    <AuthProvider>
+      <ShopProvider>
+        <AppShell />
+      </ShopProvider>
+    </AuthProvider>
   )
 }
 

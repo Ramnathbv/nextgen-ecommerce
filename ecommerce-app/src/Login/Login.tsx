@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import './Login.css';
+import axios from 'axios';
+import { useAuth } from '../context/AuthContext';
 
 interface LoginFormData {
   username: string;
@@ -28,12 +30,53 @@ const Login: React.FC<LoginProps> = ({ onClose }) => {
     email: ''
   });
 
+  const [signupErrors, setSignupErrors] = useState<{
+    username?: string;
+    email?: string;
+    password?: string;
+    confirmPassword?: string;
+  }>({});
+
+  const { login } = useAuth();
+
+  const isValidEmail = (email: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  const isValidUsername = (username: string) => /^[A-Za-z]+$/.test(username);
+  const isValidPassword = (password: string) => {
+    const lengthValid = password.length >= 12 && password.length <= 16;
+    const upper = /[A-Z]/.test(password);
+    const lower = /[a-z]/.test(password);
+    const digit = /[0-9]/.test(password);
+    const symbol = /[!@#$%^&*\-_=+\[\]{};:,.?\/]/.test(password);
+    return lengthValid && upper && lower && digit && symbol;
+  };
+  const [loginErrors, setLoginErrors] = useState<{ username?: string }>({});
+
+  const isSignupDisabled =
+    !signupData.username ||
+    !signupData.email ||
+    !signupData.password ||
+    !signupData.confirmPassword ||
+    Object.values(signupErrors).some(error => !!error);
+
+  const isLoginDisabled =
+    !loginData.username ||
+    !loginData.password;
+
   const handleLoginChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setLoginData(prev => ({
       ...prev,
       [name]: value
     }));
+
+    if (name === 'username') {
+      if (value && !isValidUsername(value)) {
+        setLoginErrors({ username: 'Username must contain only letters (no numbers).' });
+      } else {
+        setLoginErrors({ username: '' });
+      }
+    }
+
   };
 
   const handleSignupChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -42,22 +85,72 @@ const Login: React.FC<LoginProps> = ({ onClose }) => {
       ...prev,
       [name]: value
     }));
+
+  // Live validation
+  let error = '';
+  if (name === 'username' && value && !isValidUsername(value)) {
+    error = 'Username must contain only letters (no numbers).';
+  }
+  if (name === 'email' && value && !isValidEmail(value)) {
+    error = 'Please enter a valid email address.';
+  }
+  if (name === 'password' && value && !isValidPassword(value)) {
+    error = 'Password must be 12–16 characters and include uppercase, lowercase, digit, and symbol.';
+  }
+  if (name === 'confirmPassword' && value && value !== signupData.password) {
+    error = 'Passwords do not match!';
+  }
+  setSignupErrors(prev => ({
+    ...prev,
+    [name]: error
+  }));
   };
 
-  const handleLoginSubmit = (e: React.FormEvent) => {
+  const handleLoginSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     console.log('Login attempt:', loginData);
-    // Add your login logic here
+    try {
+      // const response = await fetch('https://your-api-url.com/login', {
+      //   method: 'POST',
+      //   headers: { 'Content-Type': 'application/json' },
+      //   body: JSON.stringify(loginData),
+      // });
+      const response = await axios.post('https://your-api-url.com/login', loginData);
+      if (response.data && response.data.username) {
+          login(response.data.username); // set context
+          if (onClose) onClose(); // close modal
+        } else {
+          alert(response.data.message || 'Login failed');
+      }
+    } catch (err) {
+        alert('Network error. Please try again.');
+    }
   };
 
-  const handleSignupSubmit = (e: React.FormEvent) => {
+  const handleSignupSubmit =async (e: React.FormEvent) => {
     e.preventDefault();
-    if (signupData.password !== signupData.confirmPassword) {
-      alert('Passwords do not match!');
-      return;
+    try {
+      const registrationUrl = 'http://localhost:3000/api/users/register';
+        const options = {
+          method: 'post',
+          url: registrationUrl,
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          data: signupData
+        }
+
+      console.log('Signup attempt:', signupData);
+      const response = await axios(options);
+      if (response.data && response.data.username) {
+        login(response.data.username); // set context
+        if (onClose) onClose(); // close modal
+      } else {
+        alert(response.data.message || 'Signup failed');
+      }
+    } catch (err: any) {
+      alert('Network error. Please try again.');
     }
-    console.log('Signup attempt:', signupData);
-    // Add your signup logic here
   };
 
   const toggleMode = () => {
@@ -90,6 +183,7 @@ const Login: React.FC<LoginProps> = ({ onClose }) => {
                 placeholder="Enter your username"
                 required
               />
+              {loginErrors.username && <span className="error">{loginErrors.username}</span>}
             </div>
             
             <div className="form-group">
@@ -105,7 +199,7 @@ const Login: React.FC<LoginProps> = ({ onClose }) => {
               />
             </div>
 
-            <button type="submit" className="submit-btn">
+            <button type="submit" className="submit-btn" disabled={isLoginDisabled || !!loginErrors.username}>
               Sign In
             </button>
           </form>
@@ -120,9 +214,10 @@ const Login: React.FC<LoginProps> = ({ onClose }) => {
                 name="username"
                 value={signupData.username}
                 onChange={handleSignupChange}
-                placeholder="Choose a username"
+                placeholder="Enter a username"
                 required
               />
+              {signupErrors.username && <span className="error">{signupErrors.username}</span>}
             </div>
 
             <div className="form-group">
@@ -136,6 +231,7 @@ const Login: React.FC<LoginProps> = ({ onClose }) => {
                 placeholder="Enter your email"
                 required
               />
+              {signupErrors.email && <span className="error">{signupErrors.email}</span>}
             </div>
             
             <div className="form-group">
@@ -149,6 +245,7 @@ const Login: React.FC<LoginProps> = ({ onClose }) => {
                 placeholder="Choose a password"
                 required
               />
+              {signupErrors.password && <span className="error">{signupErrors.password}</span>}
             </div>
 
             <div className="form-group">
@@ -162,9 +259,9 @@ const Login: React.FC<LoginProps> = ({ onClose }) => {
                 placeholder="Confirm your password"
                 required
               />
+              {signupErrors.confirmPassword && <span className="error">{signupErrors.confirmPassword}</span>}
             </div>
-
-            <button type="submit" className="submit-btn">
+            <button type="submit" className="submit-btn" disabled={isSignupDisabled}>
               Sign Up
             </button>
           </form>
