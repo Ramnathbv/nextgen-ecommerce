@@ -17,4 +17,7 @@ export interface ShopContextValue {
   toggleFavorite: (productId: string) => void;
   isFavorite: (productId: string) => boolean;
   totalItemsInCart: number;
+  setItemQuantity: (productId: string, quantity: number) => void;
+  incrementItem: (productId: string) => void;
+  decrementItem: (productId: string) => void;
 }

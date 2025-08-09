@@ -1,7 +1,5 @@
 import React, { useState } from 'react';
 import './Login.css';
-import axios from 'axios';
-import { useAuth } from '../context/AuthContext';
 
 interface LoginFormData {
   username: string;
@@ -15,9 +13,10 @@ interface SignupFormData extends LoginFormData {
 
 interface LoginProps {
   onClose?: () => void;
+  onSuccessLogin?: () => void;
 }
 
-const Login: React.FC<LoginProps> = ({ onClose }) => {
+const Login: React.FC<LoginProps> = ({ onClose, onSuccessLogin }) => {
   const [isSignUp, setIsSignUp] = useState(false);
   const [loginData, setLoginData] = useState<LoginFormData>({
     username: '',
@@ -37,8 +36,6 @@ const Login: React.FC<LoginProps> = ({ onClose }) => {
     confirmPassword?: string;
   }>({});
 
-  const { login } = useAuth();
-
   const isValidEmail = (email: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   const isValidUsername = (username: string) => /^[A-Za-z]+$/.test(username);
   const isValidPassword = (password: string) => {
@@ -46,7 +43,7 @@ const Login: React.FC<LoginProps> = ({ onClose }) => {
     const upper = /[A-Z]/.test(password);
     const lower = /[a-z]/.test(password);
     const digit = /[0-9]/.test(password);
-    const symbol = /[!@#$%^&*\-_=+\[\]{};:,.?\/]/.test(password);
+    const symbol = /[^A-Za-z0-9]/.test(password); // any non-alphanumeric
     return lengthValid && upper && lower && digit && symbol;
   };
   const [loginErrors, setLoginErrors] = useState<{ username?: string }>({});
@@ -76,7 +73,6 @@ const Login: React.FC<LoginProps> = ({ onClose }) => {
         setLoginErrors({ username: '' });
       }
     }
-
   };
 
   const handleSignupChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -86,76 +82,43 @@ const Login: React.FC<LoginProps> = ({ onClose }) => {
       [name]: value
     }));
 
-  // Live validation
-  let error = '';
-  if (name === 'username' && value && !isValidUsername(value)) {
-    error = 'Username must contain only letters (no numbers).';
-  }
-  if (name === 'email' && value && !isValidEmail(value)) {
-    error = 'Please enter a valid email address.';
-  }
-  if (name === 'password' && value && !isValidPassword(value)) {
-    error = 'Password must be 12–16 characters and include uppercase, lowercase, digit, and symbol.';
-  }
-  if (name === 'confirmPassword' && value && value !== signupData.password) {
-    error = 'Passwords do not match!';
-  }
-  setSignupErrors(prev => ({
-    ...prev,
-    [name]: error
-  }));
+    let error = '';
+    if (name === 'username' && value && !isValidUsername(value)) {
+      error = 'Username must contain only letters (no numbers).';
+    }
+    if (name === 'email' && value && !isValidEmail(value)) {
+      error = 'Please enter a valid email address.';
+    }
+    if (name === 'password' && value && !isValidPassword(value)) {
+      error = 'Password must be 12–16 characters and include uppercase, lowercase, digit, and symbol.';
+    }
+    if (name === 'confirmPassword' && value && value !== signupData.password) {
+      error = 'Passwords do not match!';
+    }
+    setSignupErrors(prev => ({
+      ...prev,
+      [name]: error
+    }));
   };
 
-  const handleLoginSubmit = async (e: React.FormEvent) => {
+  const handleLoginSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Login attempt:', loginData);
-    try {
-      // const response = await fetch('https://your-api-url.com/login', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify(loginData),
-      // });
-      const response = await axios.post('https://your-api-url.com/login', loginData);
-      if (response.data && response.data.username) {
-          login(response.data.username); // set context
-          if (onClose) onClose(); // close modal
-        } else {
-          alert(response.data.message || 'Login failed');
-      }
-    } catch (err) {
-        alert('Network error. Please try again.');
-    }
+    onSuccessLogin?.();
+    onClose?.();
   };
 
-  const handleSignupSubmit =async (e: React.FormEvent) => {
+  const handleSignupSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    try {
-      const registrationUrl = 'http://localhost:3000/api/users/register';
-        const options = {
-          method: 'post',
-          url: registrationUrl,
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          data: signupData
-        }
-
-      console.log('Signup attempt:', signupData);
-      const response = await axios(options);
-      if (response.data && response.data.username) {
-        login(response.data.username); // set context
-        if (onClose) onClose(); // close modal
-      } else {
-        alert(response.data.message || 'Signup failed');
-      }
-    } catch (err: any) {
-      alert('Network error. Please try again.');
+    if (signupData.password !== signupData.confirmPassword) {
+      alert('Passwords do not match!');
+      return;
     }
+    onSuccessLogin?.();
+    onClose?.();
   };
 
   const toggleMode = () => {
     setIsSignUp(!isSignUp);
-    // Clear form data when switching modes
     setLoginData({ username: '', password: '' });
     setSignupData({ username: '', password: '', confirmPassword: '', email: '' });
   };
@@ -170,7 +133,6 @@ const Login: React.FC<LoginProps> = ({ onClose }) => {
         </div>
 
         {!isSignUp ? (
-          // Login Form
           <form onSubmit={handleLoginSubmit} className="login-form">
             <div className="form-group">
               <label htmlFor="username">Username</label>
@@ -204,7 +166,6 @@ const Login: React.FC<LoginProps> = ({ onClose }) => {
             </button>
           </form>
         ) : (
-          // Signup Form
           <form onSubmit={handleSignupSubmit} className="login-form">
             <div className="form-group">
               <label htmlFor="signup-username">Username</label>
