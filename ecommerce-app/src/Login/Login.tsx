@@ -4,13 +4,13 @@ import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 
 interface LoginFormData {
-  username: string;
+  email: string;
   password: string;
 }
 
 interface SignupFormData extends LoginFormData {
   confirmPassword: string;
-  email: string;
+  name: string;
 }
 
 interface LoginProps {
@@ -20,18 +20,18 @@ interface LoginProps {
 const Login: React.FC<LoginProps> = ({ onClose }) => {
   const [isSignUp, setIsSignUp] = useState(false);
   const [loginData, setLoginData] = useState<LoginFormData>({
-    username: '',
+    email: '',
     password: ''
   });
   const [signupData, setSignupData] = useState<SignupFormData>({
-    username: '',
+    name: '',
     password: '',
     confirmPassword: '',
     email: ''
   });
 
   const [signupErrors, setSignupErrors] = useState<{
-    username?: string;
+    name?: string;
     email?: string;
     password?: string;
     confirmPassword?: string;
@@ -40,7 +40,7 @@ const Login: React.FC<LoginProps> = ({ onClose }) => {
   const { login } = useAuth();
 
   const isValidEmail = (email: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-  const isValidUsername = (username: string) => /^[A-Za-z]+$/.test(username);
+  const isValidname = (name: string) => /^[A-Za-z]+$/.test(name);
   const isValidPassword = (password: string) => {
     const lengthValid = password.length >= 12 && password.length <= 16;
     const upper = /[A-Z]/.test(password);
@@ -49,17 +49,17 @@ const Login: React.FC<LoginProps> = ({ onClose }) => {
     const symbol = /[!@#$%^&*\-_=+\[\]{};:,.?\/]/.test(password);
     return lengthValid && upper && lower && digit && symbol;
   };
-  const [loginErrors, setLoginErrors] = useState<{ username?: string }>({});
+  const [loginErrors, setLoginErrors] = useState<{ name?: string }>({});
 
   const isSignupDisabled =
-    !signupData.username ||
+    !signupData.name ||
     !signupData.email ||
     !signupData.password ||
     !signupData.confirmPassword ||
     Object.values(signupErrors).some(error => !!error);
 
   const isLoginDisabled =
-    !loginData.username ||
+    !loginData.email ||
     !loginData.password;
 
   const handleLoginChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -69,11 +69,11 @@ const Login: React.FC<LoginProps> = ({ onClose }) => {
       [name]: value
     }));
 
-    if (name === 'username') {
-      if (value && !isValidUsername(value)) {
-        setLoginErrors({ username: 'Username must contain only letters (no numbers).' });
+    if (name === 'name') {
+      if (value && !isValidname(value)) {
+        setLoginErrors({ name: 'name must contain only letters (no numbers).' });
       } else {
-        setLoginErrors({ username: '' });
+        setLoginErrors({ name: '' });
       }
     }
 
@@ -88,8 +88,8 @@ const Login: React.FC<LoginProps> = ({ onClose }) => {
 
   // Live validation
   let error = '';
-  if (name === 'username' && value && !isValidUsername(value)) {
-    error = 'Username must contain only letters (no numbers).';
+  if (name === 'name' && value && !isValidname(value)) {
+    error = 'name must contain only letters (no numbers).';
   }
   if (name === 'email' && value && !isValidEmail(value)) {
     error = 'Please enter a valid email address.';
@@ -115,12 +115,13 @@ const Login: React.FC<LoginProps> = ({ onClose }) => {
       //   headers: { 'Content-Type': 'application/json' },
       //   body: JSON.stringify(loginData),
       // });
-      const response = await axios.post('https://your-api-url.com/login', loginData);
-      if (response.data && response.data.username) {
-          login(response.data.username); // set context
+      const response = await axios.post('http://localhost:3000/api/auth/login', loginData);
+      console.log("response...", response);
+      if (response.data && response.data.data.user.name) {
+          login(response.data.data.user.name); // set context
           if (onClose) onClose(); // close modal
         } else {
-          alert(response.data.message || 'Login failed');
+          alert(response.data.data.message || 'Login failed');
       }
     } catch (err) {
         alert('Network error. Please try again.');
@@ -142,11 +143,12 @@ const Login: React.FC<LoginProps> = ({ onClose }) => {
 
       console.log('Signup attempt:', signupData);
       const response = await axios(options);
-      if (response.data && response.data.username) {
-        login(response.data.username); // set context
+      console.log(response);
+      if (response.data && response.data.data.user.name) {
+        login(response.data.data.user.name); // set context
         if (onClose) onClose(); // close modal
       } else {
-        alert(response.data.message || 'Signup failed');
+        alert(response.data.data.message || 'Signup failed');
       }
     } catch (err: any) {
       alert('Network error. Please try again.');
@@ -156,8 +158,8 @@ const Login: React.FC<LoginProps> = ({ onClose }) => {
   const toggleMode = () => {
     setIsSignUp(!isSignUp);
     // Clear form data when switching modes
-    setLoginData({ username: '', password: '' });
-    setSignupData({ username: '', password: '', confirmPassword: '', email: '' });
+    setLoginData({ email: '', password: '' });
+    setSignupData({ name: '', password: '', confirmPassword: '', email: '' });
   };
 
   return (
@@ -173,17 +175,17 @@ const Login: React.FC<LoginProps> = ({ onClose }) => {
           // Login Form
           <form onSubmit={handleLoginSubmit} className="login-form">
             <div className="form-group">
-              <label htmlFor="username">Username</label>
+              <label htmlFor="email">name</label>
               <input
                 type="text"
-                id="username"
-                name="username"
-                value={loginData.username}
+                id="email"
+                name="email"
+                value={loginData.email}
                 onChange={handleLoginChange}
-                placeholder="Enter your username"
+                placeholder="Enter your email"
                 required
               />
-              {loginErrors.username && <span className="error">{loginErrors.username}</span>}
+              {loginErrors.name && <span className="error">{loginErrors.name}</span>}
             </div>
             
             <div className="form-group">
@@ -199,7 +201,7 @@ const Login: React.FC<LoginProps> = ({ onClose }) => {
               />
             </div>
 
-            <button type="submit" className="submit-btn" disabled={isLoginDisabled || !!loginErrors.username}>
+            <button type="submit" className="submit-btn" disabled={isLoginDisabled || !!loginErrors.name}>
               Sign In
             </button>
           </form>
@@ -207,17 +209,17 @@ const Login: React.FC<LoginProps> = ({ onClose }) => {
           // Signup Form
           <form onSubmit={handleSignupSubmit} className="login-form">
             <div className="form-group">
-              <label htmlFor="signup-username">Username</label>
+              <label htmlFor="signup-name">User Name</label>
               <input
                 type="text"
-                id="signup-username"
-                name="username"
-                value={signupData.username}
+                id="signup-name"
+                name="name"
+                value={signupData.name}
                 onChange={handleSignupChange}
-                placeholder="Enter a username"
+                placeholder="Enter a name"
                 required
               />
-              {signupErrors.username && <span className="error">{signupErrors.username}</span>}
+              {signupErrors.name && <span className="error">{signupErrors.name}</span>}
             </div>
 
             <div className="form-group">

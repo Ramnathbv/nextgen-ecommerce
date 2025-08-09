@@ -2,8 +2,8 @@ import { createContext, useState, useContext, type ReactNode } from 'react';
 
 interface AuthContextType {
   isLoggedIn: boolean;
-  username: string;
-  login: (username: string) => void;
+  name: string;
+  login: (name: string) => void;
   logout: () => void;
 }
 
@@ -11,20 +11,20 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [username, setUsername] = useState('');
+  const [name, setname] = useState('');
 
   const login = (uname: string) => {
     setIsLoggedIn(true);
-    setUsername(uname);
+    setname(uname);
   };
 
   const logout = () => {
     setIsLoggedIn(false);
-    setUsername('');
+    setname('');
   };
 
   return (
-    <AuthContext.Provider value={{ isLoggedIn, username, login, logout }}>
+    <AuthContext.Provider value={{ isLoggedIn, name, login, logout }}>
       {children}
     </AuthContext.Provider>
   );

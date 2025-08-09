@@ -9,7 +9,7 @@ import './Header.css';
 type HeaderProps = { cartCount?: number };
 
 const Header = ({ cartCount = 0 }: HeaderProps) => {
-  const { isLoggedIn, username, logout } = useAuth();
+  const { isLoggedIn, name, logout } = useAuth();
   const [showLogin, setShowLogin] = useState(false);
 
   const handleLoginClick = () => {
@@ -43,7 +43,7 @@ const Header = ({ cartCount = 0 }: HeaderProps) => {
        <div className="auth-section">
                 {isLoggedIn ? (
                   <div>
-                    <span>Welcome, {username}</span>
+                    <span>Welcome, {name}</span>
                     <button onClick={logout}>Logout</button>
                   </div>
                 ) : (
