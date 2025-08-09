@@ -1,38 +1,49 @@
-import { renderHook } from '@testing-library/react-hooks';
-import useFetch from './useFetch';
-import * as api from '../services/api';
+import React from 'react';
+import { render, fireEvent, screen } from '@testing-library/react';
+import Login from './Login';
+import { AuthProvider } from '../context/AuthContext';
 
-jest.mock('../services/api');
+const renderWithProvider = (ui) =>
+  render(<AuthProvider>{ui}</AuthProvider>);
 
-describe('useFetch', () => {
-  afterEach(() => {
-    jest.clearAllMocks();
+describe('Login Field Validation', () => {
+  test('shows error for invalid username in Sign In', () => {
+    renderWithProvider(<Login />);
+    fireEvent.change(screen.getByPlaceholderText(/Enter your username/i), {
+      target: { value: 'user123' },
+    });
+    expect(screen.getByText(/Username must contain only letters/i)).toBeInTheDocument();
   });
 
-  it('should fetch and return data', async () => {
-    const mockData = [{ id: 1, name: 'Test' }];
-    api.fetchData.mockResolvedValueOnce(mockData);
-
-    const { result, waitForNextUpdate } = renderHook(() => useFetch('/test-url'));
-    expect(result.current.isLoading).toBe(true);
-
-    await waitForNextUpdate();
-
-    expect(result.current.data).toEqual(mockData);
-    expect(result.current.error).toBe('');
-    expect(result.current.isLoading).toBe(false);
+  test('shows error for invalid email in Sign Up', () => {
+    renderWithProvider(<Login />);
+    fireEvent.click(screen.getByText(/Sign Up/i));
+    fireEvent.change(screen.getByPlaceholderText(/Enter your email/i), {
+      target: { value: 'invalidemail' },
+    });
+    expect(screen.getByText(/Please enter a valid email address/i)).toBeInTheDocument();
   });
 
-  it('should handle fetch error', async () => {
-    api.fetchData.mockRejectedValueOnce('Fetch error');
+  test('shows error for invalid password in Sign Up', () => {
+    renderWithProvider(<Login />);
+    fireEvent.click(screen.getByText(/Sign Up/i));
+    fireEvent.change(screen.getByPlaceholderText(/Choose a password/i), {
+      target: { value: 'short' },
+    });
+    expect(
+      screen.getByText(/Password must be 12–16 characters and include uppercase, lowercase, digit, and symbol/i)
+    ).toBeInTheDocument();
+  });
 
-    const { result, waitForNextUpdate } = renderHook(() => useFetch('/error-url'));
-    expect(result.current.isLoading).toBe(true);
-
-    await waitForNextUpdate();
-
-    expect(result.current.data).toEqual([]);
-    expect(result.current.error).toBe('Fetch error');
-    expect(result.current.isLoading).toBe(false);
+  test('shows error when passwords do not match in Sign Up', () => {
+    renderWithProvider(<Login />);
+    fireEvent.click(screen.getByText(/Sign Up/i));
+    fireEvent.change(screen.getByPlaceholderText(/Choose a password/i), {
+      target: { value: 'ValidPassword123!' },
+    });
+    fireEvent.change(screen.getByPlaceholderText(/Confirm your password/i), {
+      target: { value: 'DifferentPassword123!' },
+    });
+    expect(screen.getByText(/Passwords do not match/i)).toBeInTheDocument();
   });
 });
